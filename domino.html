@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="./js/jquery-3.6.1.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <title>Domino Hack</title>
+    <style>
+        input {
+            width: 50%;
+        }
+
+        .field-container {
+            display: inline-block;
+            width: 60%;
+        }
+
+        .piecePlayed {
+            opacity: 0.2;
+            cursor: auto !important;
+        }
+
+        .yourPiece {
+            background-color: rgba(53, 158, 51, 0.500);
+        }
+
+        .playerSelected {
+            border: darkorange solid 5px;
+        }
+
+        .pieces div {
+            width: 135px;
+            height: 260px;
+            cursor: pointer;
+            display: inline-block;
+            background-repeat: no-repeat;
+        }
+
+        h3 {
+            color: green;
+        }
+    </style>
+
+    <script>
+        var playersAdded = 0;
+        var players = new Map();
+        var piecesAlreadyPlayed = new Map();
+        var yourCards = [];
+        var playerTurn = 0;
+        var didYouChooseYourCards = false;
+
+        $(document).ready(function () {
+            var playerInput = document.getElementById("player");
+            playerInput.addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    document.getElementById("addButton").click();
+                }
+            })
+        });
+
+        function addPlayer() {
+            var playerNameInput = document.getElementById("player");
+            var playerName = playerNameInput.value;
+            if (!playerName) return;
+
+            var playersListElement = document.getElementById("players");
+            var playersList = playersListElement.innerText;
+
+            var playerCard = document.createElement('li');
+            playerCard.className = 'list-group-item';
+            playerCard.id = playerCard.textContent = playerName;
+            playersListElement.appendChild(playerCard);
+            console.log("player" + playerCard.id)
+
+            playerNameInput.value = '';
+
+            players.set(playerName, playersAdded);
+
+            // Adding name to modal "Who play will start playing"
+            document.getElementById("player" + playersAdded).innerText = playerName;
+            playersAdded += 1;
+
+            if (playersAdded === 1) {
+                yourPlayerCard = playerCard;
+                yourPlayerCard.classList.add("list-group-item-success");
+            }
+
+            if (playersAdded === 3) {
+                yourPlayerCard = playerCard;
+                yourPlayerCard.classList.add("list-group-item-dark");
+            }
+
+            if (playersAdded >= 4) startGame();
+        }
+
+        function startGame() {
+            document.getElementsByClassName("pieces")[0].style = null
+            document.getElementById("addPlayContainer").style = "display: none";
+            document.getElementById("whostartsfirst").click();
+        } 
+
+        function makePiecesSelectableForChangeTurn() {
+            var imageNodes = document.querySelectorAll('.pieces div');
+            for (var i = 0; i < imageNodes.length; i++) {
+                imageNodes[i].addEventListener('click', function () {
+                    selectPiece(this);
+                });
+            }
+        }
+
+        function selectYourPieces() {
+            showInstruction("selectyourpieces");
+
+            var imageNodes = document.querySelectorAll('.pieces div');
+            for (var i = 0; i < imageNodes.length; i++) {
+                imageNodes[i].addEventListener('click', function () {
+                    if (yourCards.length < 7) {
+                        yourCards.push(this.id)
+                        document.getElementById(this.id).style = "background-image: linear-gradient(rgba(0,0,0,0),rgb(4, 255, 7, 0.3)),url(./img/" + this.id + ".png); border-radius: 10px;";
+                    }
+                    if (yourCards.length === 7 && !didYouChooseYourCards) {
+                        didYouChooseYourCards = true;
+                        makePiecesSelectableForChangeTurn();
+                        selectPlayer();
+                    }
+                });
+            }
+        }
+
+        function hideAllInstructions() {
+            var instructions = document.querySelectorAll("h3")
+            for (let index = 0; index < instructions.length; index++) {
+                instructions[index].style.display = 'none'
+            }
+        }
+
+        function showInstruction(instruction) {
+            hideAllInstructions();
+            document.getElementById(instruction).style.display = '';
+        }
+
+        function showInstructionForPlayerTurn() {
+            var playerName
+            for (let [name, index] of players) {
+                if (index == playerTurn) playerName = name;
+            }
+
+            document.getElementById("playerturn").innerText = "É a vez do(a) " + playerName + " jogar...";
+            showInstruction("playerturn");
+        }
+
+        function selectPlayer() {
+            var players = document.getElementById("players");
+            var player = players.children[playerTurn];
+
+            for (var i = 0; i < players.children.length; i++) {
+                players.children[i].classList.remove("playerSelected");
+            }
+
+            player.classList.add("playerSelected");
+
+            
+            showInstructionForPlayerTurn();
+        }
+
+        function changeTurn() {
+            if (playerTurn >= 3) {
+                playerTurn = 0;
+            } else {
+                playerTurn += 1;
+            }
+
+            selectPlayer();
+        }
+
+        function selectPiece(pieceElement) {
+            if (pieceElement.hasAttribute("piecePlayed")) return
+
+            console.log(playerTurn)
+            var playerName = document.getElementById("players").children[playerTurn].innerText;
+
+            const selectedPiece = pieceElement.id;
+            piecesAlreadyPlayed.set(selectedPiece, playerName);
+
+            pieceElement.classList.add("piecePlayed")
+            pieceElement.setAttribute("piecePlayed", true)
+
+            console.log(piecesAlreadyPlayed)
+
+            changeTurn();
+        }
+
+        function playerChoosed(playerIndex) {
+            playerTurn = playerIndex;
+
+            selectYourPieces();
+        }
+    </script>
+</head>
+
+<body style="text-align: center">
+
+    <h1>Matadora de Dominó</h1>
+    <p>Siga as instruções.</p>
+    <h3 id="addplayersnames">Adicione os jogadores...</h2>
+    <h3 id="playerturn" style="display: none; color: red;">É a vez do ... jogar!</h2>
+    <h3 id="selectyourpieces" style="display: none;">Escolha suas 7 pedras...</h2>
+    <div class="mb-3 field-container" style="text-align: left;">
+        <div id="addPlayContainer">
+            <label for="player" class="form-label">
+                Nome do jogador:
+                <b style="color: chocolate">(Começando por você e na ordem de jogar)</b>
+            </label>
+            <div style="display: flex;">
+                <input type="text" class="form-control" id="player">
+                <button onclick="addPlayer()" id="addButton" style="margin-left: 5px;" type="button"
+                    class="btn btn-primary">Adicionar</button>
+            </div>
+        </div>
+        <div class="my-3 text-center">
+            <ul id="players" class="list-group list-group-horizontal" style="display: inline-flex;">
+            </ul>
+        </div>
+        <div class="pieces" style="display: none;">
+            <div style="background-image: url(./img/0-0.png)" id="0-0"></div>
+            <div style="background-image: url(./img/0-1.png)" id="0-1"></div>
+            <div style="background-image: url(./img/0-2.png)" id="0-2"></div>
+            <div style="background-image: url(./img/0-3.png)" id="0-3"></div>
+            <div style="background-image: url(./img/0-4.png)" id="0-4"></div>
+            <div style="background-image: url(./img/0-5.png)" id="0-5"></div>
+            <div style="background-image: url(./img/0-6.png)" id="0-6"></div>
+            <div style="background-image: url(./img/1-1.png)" id="1-1"></div>
+            <div style="background-image: url(./img/1-2.png)" id="1-2"></div>
+            <div style="background-image: url(./img/1-3.png)" id="1-3"></div>
+            <div style="background-image: url(./img/1-4.png)" id="1-4"></div>
+            <div style="background-image: url(./img/1-5.png)" id="1-5"></div>
+            <div style="background-image: url(./img/1-6.png)" id="1-6"></div>
+            <div style="background-image: url(./img/2-2.png)" id="2-2"></div>
+            <div style="background-image: url(./img/2-3.png)" id="2-3"></div>
+            <div style="background-image: url(./img/2-4.png)" id="2-4"></div>
+            <div style="background-image: url(./img/2-5.png)" id="2-5"></div>
+            <div style="background-image: url(./img/2-6.png)" id="2-6"></div>
+            <div style="background-image: url(./img/3-3.png)" id="3-3"></div>
+            <div style="background-image: url(./img/3-4.png)" id="3-4"></div>
+            <div style="background-image: url(./img/3-5.png)" id="3-5"></div>
+            <div style="background-image: url(./img/3-6.png)" id="3-6"></div>
+            <div style="background-image: url(./img/4-4.png)" id="4-4"></div>
+            <div style="background-image: url(./img/4-5.png)" id="4-5"></div>
+            <div style="background-image: url(./img/4-6.png)" id="4-6"></div>
+            <div style="background-image: url(./img/5-5.png)" id="5-5"></div>
+            <div style="background-image: url(./img/5-6.png)" id="5-6"></div>
+            <div style="background-image: url(./img/6-6.png)" id="6-6"></div>
+        </div>
+    </div>
+    <button id="whostartsfirst" style="display: none;" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+        Trigger for modal "Who start's first"
+    </button>
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">O jogo vai começar</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Escolha quem começa jogando!
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="player0" onclick="playerChoosed(0)" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn btn-secondary" id="player1" onclick="playerChoosed(1)" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn btn-dark" id="player2" onclick="playerChoosed(2)" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn btn-secondary" id="player3" onclick="playerChoosed(3)" data-bs-dismiss="modal"></button>
+            </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+        integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.min.js"
+        integrity="sha384-IDwe1+LCz02ROU9k972gdyvl+AESN10+x7tBKgc9I5HFtuNz0wWnPclzo6p9vxnk"
+        crossorigin="anonymous"></script>
+    </div>
+</body>
+
+</html>
