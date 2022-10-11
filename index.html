@@ -152,7 +152,10 @@
                 if (index == playerTurn) playerName = name;
             }
 
-            document.getElementById("playerturn").innerText = "É a vez do(a) " + playerName + " jogar...";
+            var playerTurnElement = document.getElementById("playerturn")
+            playerTurnElement.innerText = "É a vez do(a) " + playerName + " jogar...";
+            playerTurnElement.focus();
+
             showInstruction("playerturn");
         }
 
@@ -165,7 +168,6 @@
             }
 
             player.classList.add("playerSelected");
-
             
             showInstructionForPlayerTurn();
         }
@@ -210,7 +212,7 @@
     <h1>Matadora de Dominó</h1>
     <p>Siga as instruções.</p>
     <h3 id="addplayersnames">Adicione os jogadores...</h2>
-    <h3 id="playerturn" style="display: none; color: red;">É a vez do ... jogar!</h2>
+    <h3 id="playerturn" style="display: none; color: darkorange;">É a vez do ... jogar!</h2>
     <h3 id="selectyourpieces" style="display: none;">Escolha suas 7 pedras...</h2>
     <div class="mb-3 field-container" style="text-align: left;">
         <div id="addPlayContainer">
