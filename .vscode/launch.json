@@ -8,7 +8,7 @@
             "type": "chrome",
             "request": "launch",
             "name": "Open domino.html",
-            "file": "c:\\workspace\\domino\\domino.html"
+            "file": ".\\index.html"
         }
     ]
 }

@@ -22,6 +22,12 @@
         }
 
         .piecePlayed {
+            /* opacity: 0.2;
+            cursor: auto !important; */
+            display: none !important;
+        }
+
+        .pieceNotPlayable {
             opacity: 0.2;
             cursor: auto !important;
         }
@@ -44,7 +50,12 @@
             cursor: pointer;
             display: inline-block;
             background-repeat: no-repeat;
-            zoom: 0.6;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .pieces div {
+                zoom: 0.6;
+            }
         }
 
         h3 {
@@ -56,16 +67,46 @@
         var playersAdded = 0;
         var players = new Map();
         var piecesAlreadyPlayed = new Map();
-        var yourCards = [];
+        var yourPieces = [];
         var playerTurn = 0;
-        var didYouChooseYourCards = false;
+        var piecesChoosed = false;
+        const allPieces = [
+            "0-0",
+            "0-1",
+            "0-2",
+            "0-3",
+            "0-4",
+            "0-5",
+            "0-6",
+            "1-1",
+            "1-2",
+            "1-3",
+            "1-4",
+            "1-5",
+            "1-6",
+            "2-2",
+            "2-3",
+            "2-4",
+            "2-5",
+            "2-6",
+            "3-3",
+            "3-4",
+            "3-5",
+            "3-6",
+            "4-4",
+            "4-5",
+            "4-6",
+            "5-5",
+            "5-6",
+            "6-6"
+        ]
 
         $(document).ready(function () {
             var playerInput = document.getElementById("player");
             playerInput.addEventListener("keypress", function (event) {
                 if (event.key === "Enter") {
                     event.preventDefault();
-                    document.getElementById("addButton").click();
+                    document.getElementById("addbutton").click();
                 }
             })
         });
@@ -85,7 +126,7 @@
 
             playerNameInput.value = '';
 
-            players.set(playerName, playersAdded);
+            players.set(playersAdded, playerName);
 
             // Adding name to modal "Who play will start playing"
             document.getElementById("player" + playersAdded).innerText = playerName;
@@ -125,12 +166,12 @@
             var imageNodes = document.querySelectorAll('.pieces div');
             for (var i = 0; i < imageNodes.length; i++) {
                 imageNodes[i].addEventListener('click', function () {
-                    if (yourCards.length < 7) {
-                        yourCards.push(this.id)
+                    if (yourPieces.length < 7) {
+                        yourPieces.push(this.id)
                         document.getElementById(this.id).style = "background-image: linear-gradient(rgba(0,0,0,0),rgb(4, 255, 7, 0.3)),url(./img/" + this.id + ".png); border-radius: 10px;";
                     }
-                    if (yourCards.length === 7 && !didYouChooseYourCards) {
-                        didYouChooseYourCards = true;
+                    if (yourPieces.length === 7 && !piecesChoosed) {
+                        piecesChoosed = true;
                         makePiecesSelectableForChangeTurn();
                         selectPlayer();
                     }
@@ -154,26 +195,90 @@
 
         function showInstructionForPlayerTurn() {
             var playerName
-            for (let [name, index] of players) {
+            for (let [index, name] of players) {
                 if (index == playerTurn) playerName = name;
             }
 
             document.getElementById("playerturn").innerText = "É a vez do(a) " + playerName + " jogar...";
 
+            enablePassButton();
             showInstruction("playerturn");
         }
 
+        function enablePassButton() {
+            document.getElementById("passbutton").style.display = '';
+        }
+
         function selectPlayer() {
-            var players = document.getElementById("players");
-            var player = players.children[playerTurn];
+            var playersInput = document.getElementById("players");
+            var player = playersInput.children[playerTurn];
 
-            for (var i = 0; i < players.children.length; i++) {
-                players.children[i].classList.remove("playerSelected");
+            for (var i = 0; i < playersInput.children.length; i++) {
+                playersInput.children[i].classList.remove("playerSelected");
             }
-
             player.classList.add("playerSelected");
             
+            giveTipForYourTurn();
+            
             showInstructionForPlayerTurn();
+
+            disableOrEnablePieces();
+        }
+
+        function disablePieces(pieces) {
+            pieces.forEach(piece => {
+                const pieceElement = document.getElementById(piece)
+                pieceElement.classList.add("pieceNotPlayable")
+                pieceElement.setAttribute("pieceNotPlayable", true)
+            });
+        }
+        
+        function enablePieces(pieces) {
+            pieces.forEach(piece => {
+                const pieceElement = document.getElementById(piece)
+                pieceElement.classList.remove("pieceNotPlayable")
+                pieceElement.removeAttribute("pieceNotPlayable")
+            });
+        }
+
+        function disableOrEnablePieces() {
+            const isYourTurn = playerTurn === 0
+            const noPiecePlayed = piecesAlreadyPlayed.size === 0
+
+            if (isYourTurn) {
+                disablePieces(allPieces)
+                enablePieces(yourPieces)
+            } else {
+                enablePieces(allPieces)
+                disablePieces(yourPieces)
+            }
+
+            var playersInput = document.getElementById("players");
+            var player = playersInput.children[playerTurn];
+            player.classList.add("playerSelected");
+        }
+    
+        function getYourName() { return players.get(0) }
+        function getPartnerName() { return players.get(2) }
+
+        function giveTipForYourTurn() {
+            if (playerTurn !== 0) return;
+
+            let yourPartnerPieces = []
+            for (let [piece, playerName] of piecesAlreadyPlayed) {
+                if (playerName == getPartnerName()) yourPartnerPieces.push(piece);
+            }
+
+            console.log("Your pieces:");
+            console.log(yourPieces);
+            console.log("Your partner pieces played:");
+            console.log(yourPartnerPieces);
+            console.log("Pieces already played:");
+            console.log(piecesAlreadyPlayed);
+            
+            const pieceYouShouldPlay = "0-0"
+
+            // document.getElementById(pieceYouShouldPlay).style = "background-image: linear-gradient(rgba(0,0,0,0),rgb(255, 0, 0, 0.3)),url(./img/" + pieceYouShouldPlay + ".png); border-radius: 10px;";
         }
 
         function changeTurn() {
@@ -188,6 +293,7 @@
 
         function selectPiece(pieceElement) {
             if (pieceElement.hasAttribute("piecePlayed")) return
+            if (pieceElement.hasAttribute("pieceNotPlayable")) return
 
             var playerName = document.getElementById("players").children[playerTurn].innerText;
 
@@ -223,13 +329,15 @@
             </label>
             <div style="display: flex;">
                 <input type="text" class="form-control" id="player">
-                <button onclick="addPlayer()" id="addButton" style="margin-left: 5px;" type="button"
+                <button onclick="addPlayer()" id="addbutton" style="margin-left: 5px;" type="button"
                     class="btn btn-primary">Adicionar</button>
             </div>
         </div>
         <div class="my-3 text-center">
             <ul id="players" class="list-group list-group-horizontal" style="display: inline-flex;">
             </ul>
+            <button onclick="changeTurn()" id="passbutton" style="margin: 5px; display: none;" type="button"
+                    class="btn btn-danger">Passar vez</button>
         </div>
         <div class="pieces" style="display: none;">
             <div style="background-image: url(./img/0-0.png)" id="0-0"></div>
