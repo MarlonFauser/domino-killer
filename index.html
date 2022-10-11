@@ -8,6 +8,10 @@
         integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
     <title>Domino Hack</title>
     <style>
+        body {
+            padding: 5px;
+        }
+
         input {
             width: 50%;
         }
@@ -40,6 +44,7 @@
             cursor: pointer;
             display: inline-block;
             background-repeat: no-repeat;
+            zoom: 0.6;
         }
 
         h3 {
@@ -77,7 +82,6 @@
             playerCard.className = 'list-group-item';
             playerCard.id = playerCard.textContent = playerName;
             playersListElement.appendChild(playerCard);
-            console.log("player" + playerCard.id)
 
             playerNameInput.value = '';
 
@@ -185,7 +189,6 @@
         function selectPiece(pieceElement) {
             if (pieceElement.hasAttribute("piecePlayed")) return
 
-            console.log(playerTurn)
             var playerName = document.getElementById("players").children[playerTurn].innerText;
 
             const selectedPiece = pieceElement.id;
@@ -193,8 +196,6 @@
 
             pieceElement.classList.add("piecePlayed")
             pieceElement.setAttribute("piecePlayed", true)
-
-            console.log(piecesAlreadyPlayed)
 
             changeTurn();
         }
