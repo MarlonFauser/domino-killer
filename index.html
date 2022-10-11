@@ -143,7 +143,9 @@
 
         function showInstruction(instruction) {
             hideAllInstructions();
-            document.getElementById(instruction).style.display = '';
+            var instructionElement = document.getElementById(instruction)
+            instructionElement.style.display = '';
+            window.scrollTo(0, 0);
         }
 
         function showInstructionForPlayerTurn() {
@@ -152,9 +154,7 @@
                 if (index == playerTurn) playerName = name;
             }
 
-            var playerTurnElement = document.getElementById("playerturn")
-            playerTurnElement.innerText = "É a vez do(a) " + playerName + " jogar...";
-            playerTurnElement.focus();
+            document.getElementById("playerturn").innerText = "É a vez do(a) " + playerName + " jogar...";
 
             showInstruction("playerturn");
         }
