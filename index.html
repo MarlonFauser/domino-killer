@@ -64,12 +64,14 @@
     </style>
 
     <script>
+        var whatHePlayed = null;
         var playersAdded = 0;
         var players = new Map();
         var piecesAlreadyPlayed = new Map();
         var yourPieces = [];
         var playerTurn = 0;
         var piecesChoosed = false;
+        var numbersAvailableToPlay = []
         const allPieces = [
             "0-0",
             "0-1",
@@ -149,7 +151,7 @@
             document.getElementsByClassName("pieces")[0].style = null
             document.getElementById("addPlayContainer").style = "display: none";
             document.getElementById("whostartsfirst").click();
-        } 
+        }
 
         function makePiecesSelectableForChangeTurn() {
             var imageNodes = document.querySelectorAll('.pieces div');
@@ -217,9 +219,9 @@
                 playersInput.children[i].classList.remove("playerSelected");
             }
             player.classList.add("playerSelected");
-            
-            giveTipForYourTurn();
-            
+
+            getInfos();
+
             showInstructionForPlayerTurn();
 
             disableOrEnablePieces();
@@ -232,7 +234,7 @@
                 pieceElement.setAttribute("pieceNotPlayable", true)
             });
         }
-        
+
         function enablePieces(pieces) {
             pieces.forEach(piece => {
                 const pieceElement = document.getElementById(piece)
@@ -245,48 +247,86 @@
             const isYourTurn = playerTurn === 0
             const noPiecePlayed = piecesAlreadyPlayed.size === 0
 
+            disablePieces(allPieces)
+
             if (isYourTurn) {
-                disablePieces(allPieces)
-                enablePieces(yourPieces)
+                enablePieces(getPiecesAbleToPlay().filter(pieceAbleToPlay => yourPieces.includes(pieceAbleToPlay)))
             } else {
-                enablePieces(allPieces)
-                disablePieces(yourPieces)
+                enablePieces(getPiecesAbleToPlay().filter(pieceAbleToPlay => !yourPieces.includes(pieceAbleToPlay)))
             }
 
             var playersInput = document.getElementById("players");
             var player = playersInput.children[playerTurn];
             player.classList.add("playerSelected");
         }
-    
-        function getYourName() { return players.get(0) }
-        function getPartnerName() { return players.get(2) }
 
-        function giveTipForYourTurn() {
-            if (playerTurn !== 0) return;
+        function getPiecesAbleToPlay() {
+            let listOfPiecesAlreadyPlayed = Array.from(piecesAlreadyPlayed.keys())
+
+            if (listOfPiecesAlreadyPlayed.length === 0) return allPieces;
+
+            let availablePieces = allPieces.filter(piece => listOfPiecesAlreadyPlayed.find(piecePlayed => piece !== piecePlayed))
+
+            return availablePieces.filter(availablePiece => numbersAvailableToPlay.find(numberAvailableToPlay => availablePiece.includes(numberAvailableToPlay)))
+        }
+
+        function getYourName() { return players.get(0) }
+        function getNexOpponentName() { return players.get(1) }
+        function getPartnerName() { return players.get(2) }
+        function getLastOpponentName() { return players.get(3) }
+
+        function getInfos() {
+            let yourPiecesPlayed = []
+            for (let [piece, playerName] of piecesAlreadyPlayed) {
+                if (playerName == getYourName()) yourPiecesPlayed.push(piece);
+            }
 
             let yourPartnerPieces = []
             for (let [piece, playerName] of piecesAlreadyPlayed) {
                 if (playerName == getPartnerName()) yourPartnerPieces.push(piece);
             }
 
+            let nextOpponentPieces = []
+            for (let [piece, playerName] of piecesAlreadyPlayed) {
+                if (playerName == getNexOpponentName()) nextOpponentPieces.push(piece);
+            }
+
+            let lastOponnentPieces = []
+            for (let [piece, playerName] of piecesAlreadyPlayed) {
+                if (playerName == getLastOpponentName()) lastOponnentPieces.push(piece);
+            }
+
             console.log("Your pieces:");
             console.log(yourPieces);
+            console.log("Your pieces played:");
+            console.log(yourPiecesPlayed);
+            console.log("Next oponnent pieces played:");
+            console.log(nextOpponentPieces);
             console.log("Your partner pieces played:");
             console.log(yourPartnerPieces);
-            console.log("Pieces already played:");
-            console.log(piecesAlreadyPlayed);
-            
-            const pieceYouShouldPlay = "0-0"
+            console.log("Last oponnent pieces played:");
+            console.log(lastOponnentPieces);
 
-            // document.getElementById(pieceYouShouldPlay).style = "background-image: linear-gradient(rgba(0,0,0,0),rgb(255, 0, 0, 0.3)),url(./img/" + pieceYouShouldPlay + ".png); border-radius: 10px;";
+            console.log("Numbers available to play:");
+            console.log(numbersAvailableToPlay);
+
+
+            // if (playerTurn !== 0) {
+            //     const pieceYouShouldPlay = basedOnYouPartnerAndOpponents(yourPiecesPlayed, yourPartnerPieces, nextOpponentPieces, lastOponnentPieces)
+            //     document.getElementById(pieceYouShouldPlay).style = "background-image: linear-gradient(rgba(0,0,0,0),rgb(255, 0, 0, 0.3)),url(./img/" + pieceYouShouldPlay + ".png); border-radius: 10px;";
+            // }
         }
 
+        // function basedOnYouPartnerAndOpponents(yourPiecesPlayed, yourPartnerPieces, nextOpponentPieces, lastOponnentPieces) {
+        //     yourPieces.filter(yourPiece => {
+        //         yourPartnerPieces.filter(yourPartnerPiece => { yourPartnerPiece.split("-").inclu });
+        //     });
+        // }
+
         function changeTurn() {
-            if (playerTurn >= 3) {
-                playerTurn = 0;
-            } else {
-                playerTurn += 1;
-            }
+            playerTurn += 1;
+
+            if (playerTurn >= 4) playerTurn = 0;
 
             selectPlayer();
         }
@@ -294,22 +334,136 @@
         function selectPiece(pieceElement) {
             if (pieceElement.hasAttribute("piecePlayed")) return
             if (pieceElement.hasAttribute("pieceNotPlayable")) return
+            pieceElement.classList.add("piecePlayed")
+            pieceElement.setAttribute("piecePlayed", true)
 
             var playerName = document.getElementById("players").children[playerTurn].innerText;
 
             const selectedPiece = pieceElement.id;
             piecesAlreadyPlayed.set(selectedPiece, playerName);
+            yourPieces = yourPieces.filter(yourPiece => yourPiece !== selectedPiece);
 
-            pieceElement.classList.add("piecePlayed")
-            pieceElement.setAttribute("piecePlayed", true)
+            var selectedNumbers = selectedPiece.split("-");
+
+            const isFirstPiece = piecesAlreadyPlayed.size === 1
+            if (isFirstPiece) {
+                numbersAvailableToPlay = selectedNumbers;
+            } else if (needsToTellWhatHePlayed(selectedNumbers, numbersAvailableToPlay)) {
+                document.getElementById("playerplayed0").innerText = selectedNumbers[0]
+                document.getElementById("playerplayed1").innerText = selectedNumbers[1]
+                document.getElementById("whatheplayed").click();
+                return;
+            } else {
+                calculateNumbersAvailableToPlay(selectedNumbers, null);
+                return;
+            }
 
             changeTurn();
+        }
+
+        function calculateNumbersAvailableToPlay(selectedNumbers, whatHePlayed) {
+            let newNumbersAvailableToPlay = []
+
+            selectedNumbers = selectedNumbers?.sort()
+            numbersAvailableToPlay = numbersAvailableToPlay.sort()
+
+            // [6, 5]
+            // [6, 5]
+            //  === [5, 5]
+            if (whatHePlayed === 0) {
+                const available = document.getElementById("playerplayed1").innerText
+                newNumbersAvailableToPlay = [available, available]
+            }
+            // [6, 5]
+            // [6, 5]
+            //  === [6, 6]
+            else if (whatHePlayed === 1) {
+                const available = document.getElementById("playerplayed0").innerText
+                newNumbersAvailableToPlay = [available, available]
+            }
+            // [3, 6]
+            // [2, 6]
+            //  === [3, 2]
+            else if (selectedNumbers[0] !== numbersAvailableToPlay[0] &&
+                selectedNumbers[1] === numbersAvailableToPlay[1]) {
+                newNumbersAvailableToPlay.push(numbersAvailableToPlay[0])
+                newNumbersAvailableToPlay.push(selectedNumbers[0])
+            }
+            // [0, 6]
+            // [0, 5]
+            //  === [5, 6]
+            else if (selectedNumbers[1] !== numbersAvailableToPlay[1] &&
+                selectedNumbers[0] === numbersAvailableToPlay[0]) {
+                newNumbersAvailableToPlay.push(numbersAvailableToPlay[1])
+                newNumbersAvailableToPlay.push(selectedNumbers[1])
+            }
+            // [5, 5]
+            // [5, 5]
+            //  === [5, 5]
+            else if (selectedNumbers[0] === selectedNumbers[1] &&
+                numbersAvailableToPlay[0] === numbersAvailableToPlay[1]) {
+                newNumbersAvailableToPlay = [selectedNumbers[0], selectedNumbers[0]]
+            }
+            // [4, 5]
+            // [0, 4]
+            //  === [0, 5]
+            else if (selectedNumbers[0] !== selectedNumbers[1] &&
+                numbersAvailableToPlay[0] !== numbersAvailableToPlay[1] &&
+                selectedNumbers[0] === numbersAvailableToPlay[1]) {
+                newNumbersAvailableToPlay = [numbersAvailableToPlay[0], selectedNumbers[1]]
+            }
+            // [1, 3]
+            // [3, 6]
+            //  === [0, 5]
+            else if (selectedNumbers[0] !== selectedNumbers[1] &&
+                numbersAvailableToPlay[0] !== numbersAvailableToPlay[1] &&
+                selectedNumbers[1] === numbersAvailableToPlay[0]) {
+                newNumbersAvailableToPlay = [numbersAvailableToPlay[1], selectedNumbers[0]]
+            }
+            // [5, 6]
+            // [0, 6]
+            //  === [0, 5]
+            else if (selectedNumbers[0] !== selectedNumbers[1] &&
+                numbersAvailableToPlay[0] !== numbersAvailableToPlay[1] &&
+                selectedNumbers[1] === numbersAvailableToPlay[1]) {
+                newNumbersAvailableToPlay = [numbersAvailableToPlay[0], selectedNumbers[0]]
+            }
+            // [1, 5]
+            // [0, 1]
+            //  === [0, 5]
+            if (newNumbersAvailableToPlay.length === 0) {
+                console.log("what");
+            }
+
+            numbersAvailableToPlay = newNumbersAvailableToPlay;
+
+            changeTurn();
+        }
+
+        function needsToTellWhatHePlayed(a, b) {
+            if (a[0] === a[1] && b[0] === b[1] && a[0] === b[0]) return false;
+
+            if (a === b) return true;
+            if (a == null || b == null) return false;
+            if (a.length !== b.length) return false;
+
+            a = a.sort();
+            b = b.sort();
+
+            for (var i = 0; i < a.length; ++i) {
+                if (a[i] !== b[i]) return false;
+            }
+            return true;
         }
 
         function playerChoosed(playerIndex) {
             playerTurn = playerIndex;
 
             selectYourPieces();
+        }
+
+        function playerPlayed(index) {
+            whatHePlayed = index;
         }
     </script>
 </head>
@@ -319,89 +473,121 @@
     <h1>Matadora de Dominó</h1>
     <p>Siga as instruções.</p>
     <h3 id="addplayersnames">Adicione os jogadores...</h2>
-    <h3 id="playerturn" style="display: none; color: darkorange;">É a vez do ... jogar!</h2>
-    <h3 id="selectyourpieces" style="display: none;">Escolha suas 7 pedras...</h2>
-    <div class="mb-3 field-container" style="text-align: left;">
-        <div id="addPlayContainer">
-            <label for="player" class="form-label">
-                Nome do jogador:
-                <b style="color: chocolate">(Começando por você e na ordem de jogar)</b>
-            </label>
-            <div style="display: flex;">
-                <input type="text" class="form-control" id="player">
-                <button onclick="addPlayer()" id="addbutton" style="margin-left: 5px;" type="button"
-                    class="btn btn-primary">Adicionar</button>
-            </div>
-        </div>
-        <div class="my-3 text-center">
-            <ul id="players" class="list-group list-group-horizontal" style="display: inline-flex;">
-            </ul>
-            <button onclick="changeTurn()" id="passbutton" style="margin: 5px; display: none;" type="button"
-                    class="btn btn-danger">Passar vez</button>
-        </div>
-        <div class="pieces" style="display: none;">
-            <div style="background-image: url(./img/0-0.png)" id="0-0"></div>
-            <div style="background-image: url(./img/0-1.png)" id="0-1"></div>
-            <div style="background-image: url(./img/0-2.png)" id="0-2"></div>
-            <div style="background-image: url(./img/0-3.png)" id="0-3"></div>
-            <div style="background-image: url(./img/0-4.png)" id="0-4"></div>
-            <div style="background-image: url(./img/0-5.png)" id="0-5"></div>
-            <div style="background-image: url(./img/0-6.png)" id="0-6"></div>
-            <div style="background-image: url(./img/1-1.png)" id="1-1"></div>
-            <div style="background-image: url(./img/1-2.png)" id="1-2"></div>
-            <div style="background-image: url(./img/1-3.png)" id="1-3"></div>
-            <div style="background-image: url(./img/1-4.png)" id="1-4"></div>
-            <div style="background-image: url(./img/1-5.png)" id="1-5"></div>
-            <div style="background-image: url(./img/1-6.png)" id="1-6"></div>
-            <div style="background-image: url(./img/2-2.png)" id="2-2"></div>
-            <div style="background-image: url(./img/2-3.png)" id="2-3"></div>
-            <div style="background-image: url(./img/2-4.png)" id="2-4"></div>
-            <div style="background-image: url(./img/2-5.png)" id="2-5"></div>
-            <div style="background-image: url(./img/2-6.png)" id="2-6"></div>
-            <div style="background-image: url(./img/3-3.png)" id="3-3"></div>
-            <div style="background-image: url(./img/3-4.png)" id="3-4"></div>
-            <div style="background-image: url(./img/3-5.png)" id="3-5"></div>
-            <div style="background-image: url(./img/3-6.png)" id="3-6"></div>
-            <div style="background-image: url(./img/4-4.png)" id="4-4"></div>
-            <div style="background-image: url(./img/4-5.png)" id="4-5"></div>
-            <div style="background-image: url(./img/4-6.png)" id="4-6"></div>
-            <div style="background-image: url(./img/5-5.png)" id="5-5"></div>
-            <div style="background-image: url(./img/5-6.png)" id="5-6"></div>
-            <div style="background-image: url(./img/6-6.png)" id="6-6"></div>
-        </div>
-    </div>
-    <button id="whostartsfirst" style="display: none;" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
-        Trigger for modal "Who start's first"
-    </button>
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="exampleModalLabel">O jogo vai começar</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Escolha quem começa jogando!
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success" id="player0" onclick="playerChoosed(0)" data-bs-dismiss="modal"></button>
-                <button type="button" class="btn btn-secondary" id="player1" onclick="playerChoosed(1)" data-bs-dismiss="modal"></button>
-                <button type="button" class="btn btn-dark" id="player2" onclick="playerChoosed(2)" data-bs-dismiss="modal"></button>
-                <button type="button" class="btn btn-secondary" id="player3" onclick="playerChoosed(3)" data-bs-dismiss="modal"></button>
-            </div>
-            </div>
-        </div>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
-        integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
-        crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.min.js"
-        integrity="sha384-IDwe1+LCz02ROU9k972gdyvl+AESN10+x7tBKgc9I5HFtuNz0wWnPclzo6p9vxnk"
-        crossorigin="anonymous"></script>
-    </div>
+        <h3 id="playerturn" style="display: none; color: darkorange;">É a vez do ... jogar!</h2>
+            <h3 id="selectyourpieces" style="display: none;">Escolha suas 7 pedras...</h2>
+                <div class="mb-3 field-container" style="text-align: left;">
+                    <div id="addPlayContainer">
+                        <label for="player" class="form-label">
+                            Nome do jogador:
+                            <b style="color: chocolate">(Começando por você e na ordem de jogar)</b>
+                        </label>
+                        <div style="display: flex;">
+                            <input type="text" class="form-control" id="player">
+                            <button onclick="addPlayer()" id="addbutton" style="margin-left: 5px;" type="button"
+                                class="btn btn-primary">Adicionar</button>
+                        </div>
+                    </div>
+                    <div class="my-3 text-center">
+                        <ul id="players" class="list-group list-group-horizontal" style="display: inline-flex;">
+                        </ul>
+                        <button onclick="changeTurn()" id="passbutton" style="margin: 5px; display: none;" type="button"
+                            class="btn btn-danger">Passar vez</button>
+                    </div>
+                    <div class="pieces" style="display: none;">
+                        <div style="background-image: url(./img/0-0.png)" id="0-0"></div>
+                        <div style="background-image: url(./img/0-1.png)" id="0-1"></div>
+                        <div style="background-image: url(./img/0-2.png)" id="0-2"></div>
+                        <div style="background-image: url(./img/0-3.png)" id="0-3"></div>
+                        <div style="background-image: url(./img/0-4.png)" id="0-4"></div>
+                        <div style="background-image: url(./img/0-5.png)" id="0-5"></div>
+                        <div style="background-image: url(./img/0-6.png)" id="0-6"></div>
+                        <div style="background-image: url(./img/1-1.png)" id="1-1"></div>
+                        <div style="background-image: url(./img/1-2.png)" id="1-2"></div>
+                        <div style="background-image: url(./img/1-3.png)" id="1-3"></div>
+                        <div style="background-image: url(./img/1-4.png)" id="1-4"></div>
+                        <div style="background-image: url(./img/1-5.png)" id="1-5"></div>
+                        <div style="background-image: url(./img/1-6.png)" id="1-6"></div>
+                        <div style="background-image: url(./img/2-2.png)" id="2-2"></div>
+                        <div style="background-image: url(./img/2-3.png)" id="2-3"></div>
+                        <div style="background-image: url(./img/2-4.png)" id="2-4"></div>
+                        <div style="background-image: url(./img/2-5.png)" id="2-5"></div>
+                        <div style="background-image: url(./img/2-6.png)" id="2-6"></div>
+                        <div style="background-image: url(./img/3-3.png)" id="3-3"></div>
+                        <div style="background-image: url(./img/3-4.png)" id="3-4"></div>
+                        <div style="background-image: url(./img/3-5.png)" id="3-5"></div>
+                        <div style="background-image: url(./img/3-6.png)" id="3-6"></div>
+                        <div style="background-image: url(./img/4-4.png)" id="4-4"></div>
+                        <div style="background-image: url(./img/4-5.png)" id="4-5"></div>
+                        <div style="background-image: url(./img/4-6.png)" id="4-6"></div>
+                        <div style="background-image: url(./img/5-5.png)" id="5-5"></div>
+                        <div style="background-image: url(./img/5-6.png)" id="5-6"></div>
+                        <div style="background-image: url(./img/6-6.png)" id="6-6"></div>
+                    </div>
+                </div>
+                <button id="whostartsfirst" style="display: none;" type="button" class="btn btn-primary"
+                    data-bs-toggle="modal" data-bs-target="#choosePlayerModal">
+                    Trigger for modal "Who start's first"
+                </button>
+                <button id="whatheplayed" style="display: none;" type="button" class="btn btn-primary"
+                    data-bs-toggle="modal" data-bs-target="#playerPlayedModal">
+                    Trigger for modal "Which one he played"
+                </button>
+                <div class="modal fade" id="choosePlayerModal" tabindex="-1" aria-labelledby="choosePlayerModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="choosePlayerModalLabel">O jogo vai começar</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Escolha quem começa jogando!
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-success" id="player0" onclick="playerChoosed(0)"
+                                    data-bs-dismiss="modal"></button>
+                                <button type="button" class="btn btn-secondary" id="player1" onclick="playerChoosed(1)"
+                                    data-bs-dismiss="modal"></button>
+                                <button type="button" class="btn btn-dark" id="player2" onclick="playerChoosed(2)"
+                                    data-bs-dismiss="modal"></button>
+                                <button type="button" class="btn btn-secondary" id="player3" onclick="playerChoosed(3)"
+                                    data-bs-dismiss="modal"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="playerPlayedModal" tabindex="-1" aria-labelledby="playerPlayedModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5" id="playerPlayedModalLabel">O que ele jogou?</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Escolha qual número da pedra ele usou
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" id="playerplayed0"
+                                    onclick="calculateNumbersAvailableToPlay(null, 0)" data-bs-dismiss="modal"></button>
+                                <button type="button" class="btn btn-dark" id="playerplayed1"
+                                    onclick="calculateNumbersAvailableToPlay(null, 1)" data-bs-dismiss="modal"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+                    integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+                    crossorigin="anonymous"></script>
+                <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+                    integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
+                    crossorigin="anonymous"></script>
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.min.js"
+                    integrity="sha384-IDwe1+LCz02ROU9k972gdyvl+AESN10+x7tBKgc9I5HFtuNz0wWnPclzo6p9vxnk"
+                    crossorigin="anonymous"></script>
+                </div>
 </body>
 
 </html>
